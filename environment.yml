@@ -21,3 +21,6 @@ dependencies:
     - opencv_python==4.8.1.78
     - imageio==2.31.2
     - open3d==0.17.0
+    - dahuffman==0.4.1
+    - vector-quantize-pytorch==1.8.1
+    - git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/torch
