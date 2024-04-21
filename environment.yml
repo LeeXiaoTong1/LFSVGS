@@ -1,4 +1,4 @@
-name: FSGS
+name: L-GS
 channels:
   - pytorch
   - conda-forge
