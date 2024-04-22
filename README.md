@@ -27,7 +27,7 @@ unzip -d mipnerf360 360_v2.zip
 # run colmap on MipNeRF-360 dataset
 python tools/colmap_360.py
 ```
-If you encounter difficulties during data preprocessing, you can download point cloud data that has been preprocessed using Colmap. You may download them [through this link](https://drive.google.com/drive/folders/1VymLQAqzXtrd2CnWAFSJ0RTTnp25mLgA?usp=share_link). We use dense point cloud during training but you can still try sparse point cloud on your own.
+If you encounter difficulties during data preprocessing, you can download dense point cloud data that has been preprocessed using Colmap. You may download them [through this link](https://drive.google.com/drive/folders/1VymLQAqzXtrd2CnWAFSJ0RTTnp25mLgA?usp=share_link). 
 
 ## Training
 LLFF datasets. You can set `--sample_pseudo_interval` to 10 to achieve good results, which can significantly reduce the training time.
@@ -51,8 +51,7 @@ If you want to obtain depth maps predicted by a monocular depth estimator.
 ```
 python render.py --source_path dataset/nerf_llff_data/flower/  --model_path  output/flower --iteration 10000 --render_depth
 ```
-You can customize the rendering path as same as NeRF by adding `video` argument
-
+You can render a downloadable video file by adding the 'video' parameter.
 ```
 python render.py --source_path dataset/nerf_llff_data/flower/  --model_path  output/flower --iteration 10000  --video  --fps 30
 ```
