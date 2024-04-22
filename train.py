@@ -224,9 +224,9 @@ def training(dataset, opt, pipe, args):
                     iteration > args.start_sample_pseudo:
                 gaussians.reset_opacity()
             
-            else:
-                if iteration % opt.mask_prune_iter == 0:
-                    gaussians.mask_prune(iteration)
+            # else:
+            #     if iteration % opt.mask_prune_iter == 0:
+            #         gaussians.mask_prune(iteration)
             
             if iteration > first_iter and (iteration in checkpoint_iterations):
                 print("\n[ITER {}] Saving Checkpoint".format(iteration))
