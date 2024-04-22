@@ -66,12 +66,11 @@ python metrics.py --source_path dataset/nerf_llff_data/flower/  --model_path  ou
 
 ## Acknowledgement
 
-Special thanks to the following awesome projects!
+Our method benefits from these excellent works.
 
 - [Gaussian-Splatting](https://github.com/graphdeco-inria/gaussian-splatting)
-- [FSGS](https://github.com/VITA-Group/FSGS))
+- [FSGS](https://github.com/VITA-Group/FSGS)
 - [SparseNeRF](https://github.com/Wanggcong/SparseNeRF)
 - [Compact-3DGS](https://github.com/maincold2/Compact-3DGS)
 - [MipNeRF-360](https://github.com/google-research/multinerf)
 - [efficientgaussian](https://github.com/Sharath-girish/efficientgaussian)
-- 
