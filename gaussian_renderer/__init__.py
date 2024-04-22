@@ -35,9 +35,6 @@ def render(viewpoint_camera, pc: GaussianModel, pipe, bg_color : torch.Tensor, i
     # Set up rasterization configuration
     tanfovx = math.tan(viewpoint_camera.FoVx * 0.5)
     tanfovy = math.tan(viewpoint_camera.FoVy * 0.5)
-                       
-    if image_shape is None:
-        image_shape = (3, viewpoint_camera.image_height, viewpoint_camera.image_width)
 
     if min(pc.bg_color.shape) != 0:
         bg_color = torch.tensor([0., 0., 0.]).cuda()
