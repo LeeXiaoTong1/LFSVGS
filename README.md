@@ -1,4 +1,6 @@
 # Lightweight Few-shot View Gaussian Splatting reconstruction method
+![Uploading output.gif…]()
+
 ## Environmental Setups
 We provide install method based on Conda package and environment management:
 ```bash
