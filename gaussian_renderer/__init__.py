@@ -65,10 +65,6 @@ def render(viewpoint_camera, pc: GaussianModel, pipe, bg_color : torch.Tensor, i
     means3D = pc.get_xyz
     means2D = screenspace_points
     cov3D_precomp = None
-    # if pipe.compute_cov3D_python:
-    #     cov3D_precomp = pc.get_covariance(scaling_modifier)
-    # l_vqsca=0
-    # l_vqrot=0
     if itr == -1:
         scales = pc._scaling
         rotations = pc._rotation
@@ -83,9 +79,9 @@ def render(viewpoint_camera, pc: GaussianModel, pipe, bg_color : torch.Tensor, i
         if rvq_iter:
             scales = pc.vq_scale(pc.get_scaling.unsqueeze(0))[0]
             rotations = pc.vq_rot(pc.get_rotation.unsqueeze(0))[0]
-            scales = scales.squeeze()*mask
+            scales = scales.squeeze()
             rotations = rotations.squeeze()
-            opacity = pc.get_opacity*mask
+            opacity = pc.get_opacity
         else:
             scales = pc.get_scaling*mask
             rotations = pc.get_rotation
@@ -107,24 +103,6 @@ def render(viewpoint_camera, pc: GaussianModel, pipe, bg_color : torch.Tensor, i
         scales = scales,
         rotations = rotations,
         cov3D_precomp = cov3D_precomp)
-
-    # rendered_image_list, depth_list, alpha_list = [], [], []
-    # for i in range(5):
-    #     rendered_image, radii, depth, alpha = rasterizer(
-    #         means3D=means3D,
-    #         means2D=means2D,
-    #         shs=shs,
-    #         colors_precomp=colors_precomp,
-    #         opacities=opacity,
-    #         scales=scales,
-    #         rotations=rotations,
-    #         cov3D_precomp=cov3D_precomp)
-    #     rendered_image_list.append(rendered_image)
-    #     depth_list.append(depth)
-    #     alpha_list.append(alpha)
-    # def mean1(t):
-    #     return torch.mean(torch.stack(t), 0)
-    # rendered_image, depth, alpha = mean1(rendered_image_list), mean1(depth_list), mean1(alpha_list)
 
     if min(pc.bg_color.shape) != 0:
         rendered_image = rendered_image + (1 - alpha) * torch.sigmoid(pc.bg_color)  # torch.ones((3, 1, 1)).cuda()
