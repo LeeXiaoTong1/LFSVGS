@@ -97,7 +97,7 @@ class GaussianModel:
             },
             )
         self.mlp_head = tcnn.Network(
-                n_input_dims=(self.recolor.n_output_dims),
+                n_input_dims=(self.direction_encoding.n_output_dims + self.recolor.n_output_dims),
                 n_output_dims=3,
                 network_config={
                     "otype": "FullyFusedMLP",
