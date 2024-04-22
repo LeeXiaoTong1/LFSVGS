@@ -1,5 +1,9 @@
 # Lightweight Few-shot View Gaussian Splatting reconstruction method
-![Uploading output.gif…]()
+<p align="center" >
+  <a href="">
+    <img src="https://github.com/LeeXiaoTong1/LFSVGS/edit/master/ouput.gif?raw=true" alt="demo" width="85%">
+  </a>
+</p>
 
 ## Environmental Setups
 We provide install method based on Conda package and environment management:
