@@ -1,4 +1,3 @@
-##这是第一次成功实验的model，我取消了base对features的计算，去掉了mlp对dir的计算。
 # Copyright (C) 2023, Inria
 # GRAPHDECO research group, https://team.inria.fr/graphdeco
 # All rights reserved.
@@ -64,7 +63,7 @@ class GaussianModel:
         self._opacity = torch.empty(0)
         self._mask = torch.empty(0)
         self.max_radii2D = torch.empty(0)
-        self.xyz_gradient_accum = torch.empty(0)
+        self.xyz_gradient_accum = torch.empty(0)       
         self.denom = torch.empty(0)
         self.optimizer = None
         self.percent_dense = 0
@@ -123,24 +122,25 @@ class GaussianModel:
             self.optimizer.state_dict(),
             self.spatial_lr_scale,
         )
-
+    
     def restore(self, model_args, training_args):
+        # self._features_dc,
+        # self._features_rest,
         (self.active_sh_degree,
          self._xyz,
-         # self._features_dc,
-         # self._features_rest,
          self._scaling,
-         self._rotation,
-         self._opacity,
-         self.max_radii2D,
-         xyz_gradient_accum,
-         denom,
-         opt_dict,
-         self.spatial_lr_scale) = model_args
+        self._rotation,
+        self._opacity,
+        self.max_radii2D,
+        xyz_gradient_accum,
+        denom,
+        opt_dict,
+        self.spatial_lr_scale) = model_args
         self.training_setup(training_args)
         self.xyz_gradient_accum = xyz_gradient_accum
         self.denom = denom
-        # self.optimizer.load_state_dict(opt_dict)
+        self.optimizer.load_state_dict(opt_dict)
+    
 
     @property
     def get_scaling(self):
@@ -520,7 +520,6 @@ class GaussianModel:
             self._mask = optimizable_tensors["mask"]
 
             self.xyz_gradient_accum = self.xyz_gradient_accum[valid_points_mask]
-
             self.denom = self.denom[valid_points_mask]
             self.max_radii2D = self.max_radii2D[valid_points_mask]
             self.confidence = self.confidence[valid_points_mask]
@@ -575,6 +574,8 @@ class GaussianModel:
         self._mask = optimizable_tensors["mask"]
 
         self.xyz_gradient_accum = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
+        self.xyz_gradient_accum_abs = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
+        
         self.denom = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
         self.max_radii2D = torch.zeros((self.get_xyz.shape[0]), device="cuda")
         self.confidence = torch.cat([self.confidence, torch.ones(new_opacities.shape, device="cuda")], 0)
@@ -596,6 +597,40 @@ class GaussianModel:
         # new_features_rest = torch.zeros_like(self._features_rest[new_indices])
         new_opacity = self._opacity[new_indices]
         new_mask = self._mask[new_indices]
+        self.densification_postfix(new_xyz, new_opacity, new_scaling, new_rotation, new_mask)
+    
+    def proximity_opt(self, scene_extent, N=3):
+        # 获取不透明度集合
+        opacity_values = self.get_opacity.squeeze()
+    
+        # 计算最大值、最小值和平均值
+        opacity_max = torch.max(opacity_values)
+        opacity_min = torch.min(opacity_values)
+        opacity_mean = torch.mean(opacity_values)
+
+        # 输出结果
+        # print("Max opacity:", opacity_max.item())
+        # print("Min opacity:", opacity_min.item())
+        # print("Mean opacity:", opacity_mean.item())
+        
+        opacity_mask = self.get_opacity.squeeze() < opacity_mean
+        dist, nearest_indices = distCUDA2(self.get_xyz)
+        selected_pts_mask = torch.logical_and(dist > (11. * scene_extent),
+                                              torch.max(self.get_scaling, dim=1).values > (scene_extent))
+        selected_pts_mask = torch.logical_and(selected_pts_mask, opacity_mask)
+
+        new_indices = nearest_indices[selected_pts_mask].reshape(-1).long()
+        source_xyz = self._xyz[selected_pts_mask].repeat(1, N, 1).reshape(-1, 3)
+        target_xyz = self._xyz[new_indices]
+        new_xyz = (source_xyz + target_xyz) / 2
+        new_scaling = self._scaling[new_indices]
+        new_rotation = torch.zeros_like(self._rotation[new_indices])
+        new_rotation[:, 0] = 1
+        # new_features_dc = torch.zeros_like(self._features_dc[new_indices])
+        # new_features_rest = torch.zeros_like(self._features_rest[new_indices])
+        new_opacity = self._opacity[new_indices]
+        new_mask = self._mask[new_indices]
+
         self.densification_postfix(new_xyz, new_opacity, new_scaling, new_rotation, new_mask)
 
 
@@ -655,13 +690,17 @@ class GaussianModel:
     def densify_and_prune(self, max_grad, min_opacity, extent, max_screen_size, iter):
         grads = self.xyz_gradient_accum / self.denom
         grads[grads.isnan()] = 0.0
-
+       
         self.densify_and_clone(grads, max_grad, extent)
         self.densify_and_split(grads, max_grad, extent, iter)
         if iter < 2000:
             self.proximity(extent)
+            
+        if iter > 2000 and iter < 2500:
+            self.proximity_opt(extent)
 
-        prune_mask = torch.logical_or((torch.sigmoid(self._mask) <= 0.01).squeeze(),(self.get_opacity < min_opacity).squeeze())
+        # prune_mask = torch.logical_or((torch.sigmoid(self._mask) <= 0.01).squeeze(),(self.get_opacity < min_opacity).squeeze())
+        prune_mask = (self.get_opacity < min_opacity).squeeze()
         if max_screen_size:
             big_points_vs = self.max_radii2D > max_screen_size
             big_points_ws = self.get_scaling.max(dim=1).values > 0.1 * extent
@@ -703,7 +742,7 @@ class GaussianModel:
 
     def final_prune(self, iter, compress=False):
         prune_mask = (torch.sigmoid(self._mask) <= 0.01).squeeze()
-        self.prune_points(prune_mask, iter)
+        # self.prune_points(prune_mask, iter)
 
         for m in self.vq_scale.layers:
             m.training = False
