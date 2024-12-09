@@ -1,7 +1,7 @@
 # LFVGS: Lightweight Few-shot View Gaussian Splatting reconstruction method
 <p align="center" >
   <a href="">
-    <img src="output.gif?raw=true" alt="demo" width="85%">
+    %<img src="output.gif?raw=true" alt="demo" width="85%">
   </a>
 </p>
 
